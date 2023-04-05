@@ -5,11 +5,9 @@ import {
     hasMany, 
     RestSerializer, 
     Factory,
-    JSONAPISerializer,
-    Serializer,
+   
 } from "miragejs"
 import * as faker from 'faker';
-import { serialize } from "v8";
 
 
 
@@ -63,8 +61,11 @@ export function makeServer () {
             }
            
         },
+       
         routes() {
-            this.namespace = "api"
+            
+            this.namespace = "api"; // <-- Set namespace here
+            
             this.get("/users", (schema: any) => {
                 return schema.users.all()
             })
@@ -79,7 +80,7 @@ export function makeServer () {
 
             // todo apis
             this.get("/todos", (schema: any, request) => {
-                const active = request.params.active
+                // const active = request.params.active
           
                 return schema.todos.all()
             })
@@ -96,13 +97,14 @@ export function makeServer () {
                 return {success:true}
 
             })
-            this.post("/todo/create", (schema:any,request)=>{
-                let attrs = JSON.parse(request.requestBody)
-                return schema.todos.create(attrs)
-            })
+            this.post("/todo/create", (schema, request) => {
+                const attrs = JSON.parse(request.requestBody);
+                return schema.create("todo", attrs);
+            });
 
 
         }
+    
     })
     return server
 }

@@ -1,5 +1,6 @@
+import axios from "axios";
 import React, { Fragment, useRef } from "react";
-import ColorToggleButton from "./components/toggleUI";
+
 import classes from "./addTaskModal.module.css";
 import Stack from "@mui/material/Stack";
 import Button from "@mui/material/Button";
@@ -12,48 +13,63 @@ import { dataProps } from "./App";
 
 
 type tableProps = {
-  getData: dataProps[],
+  getData: dataProps[];
   onClose: () => void;
 };
 
-
-
-function TaskModal({ onClose, getData } :tableProps) {
-
-
-
-
-
+function TaskModal({ onClose, getData }: tableProps) {
   const titleRef = useRef<HTMLInputElement>(null);
+  const userRef = useRef<HTMLSelectElement>(null);
 
   function submitHandler(event: React.FormEvent) {
     event.preventDefault();
-    
-    const enteredText = titleRef.current!.value;
 
-  
-    if(enteredText?.trim().length === 0) {
+    const enteredText = titleRef.current!.value;
+    const selectedUser = userRef.current?.value;
+
+    console.log({
+      title: enteredText,
+      user: selectedUser,
+    });
+
+    if (enteredText?.trim().length === 0) {
       return;
     }
 
-      console.log(enteredText);
-      
-      titleRef.current!.value = '';
-  };
+    const newTask = {
+      title: enteredText,
+      user: selectedUser,
+      completed: false,
+    };
 
-  const users = Array.from(new Set(getData.map((item: any) => {
-    return (
-      {
-        name: item.userName,
-        value: item.userId
-      }
+    axios
+      .post("/todo/create", newTask)
+      .then((response) => {
+        console.log(response.data);
+        getData.push(response.data); // Add new task to existing task table
+        onClose();
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+
+    titleRef.current!.value = "";
+  }
+
+  const users = Array.from(
+    new Set(
+      getData.map((item: any) => {
+        return {
+          name: item.userName,
+        };
+      }).map((user: any) => user.name)
     )
-    })))
+  ).map((name: string, index: number) => ({
+    name,
+    value: index,
+  }));
 
   console.log(users);
-  
-
-  
 
   return (
     <Fragment>
@@ -61,7 +77,7 @@ function TaskModal({ onClose, getData } :tableProps) {
         <div className={classes.backdrop}></div>
         <div className={classes.modal}>
           <Box
-            component='form'
+            component="form"
             sx={{
               "& .MuiTextField-root": { m: 2, width: "60ch" },
             }}
@@ -74,49 +90,35 @@ function TaskModal({ onClose, getData } :tableProps) {
               />
             </div>
           </Box>
-
-          
           <div className={classes.control}>
-       
             <Box sx={{ minWidth: 120 }}>
-      
               <FormControl fullWidth>
                 <InputLabel variant="standard" htmlFor="uncontrolled-native">
                   User
                 </InputLabel>
-             
+
                 <NativeSelect
                   defaultValue={30}
                   inputProps={{
                     name: "user",
                     id: "uncontrolled-native",
                   }}
+                  ref={userRef}
                 >
                   {users.map((item) => {
-                    return (
-                      <option value={item.value}>{item.name}</option>
-                    )
+                    return <option value={item.value}>{item.name}</option>;
                   })}
-             
-                  
                 </NativeSelect>
               </FormControl>
-     
             </Box>
-            <ColorToggleButton></ColorToggleButton>
-      
           </div>
 
-
-
           <Stack spacing={3} direction="row">
-            <button >Add Task</button>
+            <Button type="submit">Add Task</Button>
             <Button variant="text" color="error" onClick={onClose}>
               Close
             </Button>
           </Stack>
-
-
         </div>
       </form>
     </Fragment>
